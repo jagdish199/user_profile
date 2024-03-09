@@ -10,7 +10,7 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(express.urlencoded({extended:false}))
-
+app.use(express.static(path.resolve("./public")))
 
 app.get("/",(req,res)=>{
     return res.end("jagdish dawar")
