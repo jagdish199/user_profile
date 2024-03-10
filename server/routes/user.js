@@ -60,4 +60,46 @@ router.get('/profile', fetchUser, async (req, res) => {
     res.send(data);
 });
 
+router.post("/login/edit", fetchUser, async (req, res) => {
+    const user = req.user;
+    const { name, password, location } = req.body;
+
+    try {
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateData.password = hashedPassword;
+        }
+        if (location) updateData.location = location;
+
+        const updatedUser = await User.findByIdAndUpdate(user.userId, updateData, { new: true });
+
+        return res.json({ user: updatedUser });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send("Internal Server Error");
+    }
+});
+
+
+router.delete("/login/delete", fetchUser, async (req, res) => {
+    const user = req.user;
+
+    try {
+        const existingUser = await User.findById(user.userId);
+        if (!existingUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        await User.findByIdAndDelete(user.userId);
+
+        return res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+});
+
+
 module.exports = router;
