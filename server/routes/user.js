@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const User = require("../module/user");
 const JWT = require("jsonwebtoken");
 const fetchUser = require('../middlewares/user');
+const multer = require("multer")
+const path = require("path")
 
 const router = Router();
 
@@ -95,6 +97,38 @@ router.delete("/login/delete", fetchUser, async (req, res) => {
         await User.findByIdAndDelete(user.userId);
 
         return res.json({ success: true, message: "User deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+});
+
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.resolve(`./public/uploads/`))
+    },
+    filename: function (req, file, cb) {
+        const fileName = `${Date.now()}-${file.originalname}`;
+        cb(null, fileName)
+    }
+})
+
+const upload = multer({ storage: storage })
+
+router.post("/login/upload", fetchUser, upload.single("profileImage"), async (req, res) => {
+    const user = req.user;
+
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No file uploaded" });
+        }
+
+        const updateData = { coverImageURL: `uploads/${req.file.filename}` };
+
+        const updatedUser = await User.findByIdAndUpdate(user.userId, updateData, { new: true });
+
+        return res.json({ success: true, message: "Profile image updated successfully", user: updatedUser });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ success: false, message: "Internal Server Error" });
