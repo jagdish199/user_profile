@@ -124,7 +124,7 @@ router.post("/login/upload", fetchUser, upload.single("profileImage"), async (re
             return res.status(400).json({ success: false, message: "No file uploaded" });
         }
 
-        const updateData = { coverImageURL: `uploads/${req.file.filename}` };
+        const updateData = { profileImageURL: `uploads/${req.file.filename}` };
 
         const updatedUser = await User.findByIdAndUpdate(user.userId, updateData, { new: true });
 
